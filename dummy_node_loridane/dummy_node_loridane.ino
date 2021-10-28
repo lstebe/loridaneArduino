@@ -83,11 +83,11 @@ void setup() {
   LoRa.setSpreadingFactor(SF);
   LoRa.setTxPower(txPower);
   Serial.println("LoRa Initializing OK!");
-  #ifdef ENCRYPT
-  sendUplink(UIDN,true);
-  #else
-  sendUplink(UIDN,false);
-  #endif
+#ifdef ENCRYPT
+  sendUplink(UIDN, true);
+#else
+  sendUplink(UIDN, false);
+#endif
   //hold(3000);
   delay(3500);
   int packetSize = LoRa.parsePacket();
@@ -128,10 +128,11 @@ void loop() {
 
   }
 
-
+  if (maysend(nowtime)) {
 #ifdef ENCRYPT
-  sendUplink((String) sensorRead(), true);
+    sendUplink((String) sensorRead(), true);
 #else
-  sendUplink((String) sensorRead(), false);
+    sendUplink((String) sensorRead(), false);
 #endif
+  }
 }
