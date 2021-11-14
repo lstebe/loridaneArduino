@@ -27,7 +27,7 @@
 #include <SPI.h>
 #include <LoRa.h>
 #include "credentials.h"
-
+#include <base64.h>
 #ifdef ENCRYPT
 #include "encrypt.h"
 Cipher * cipher = new Cipher();
@@ -130,7 +130,13 @@ void loop() {
 
   if (maysend(nowtime)) {
 #ifdef ENCRYPT
-    sendUplink((String) sensorRead(), true);
+    //sendUplink((String) sensorRead(), true);
+    String reading = sensorRead();
+    while((reading.length() +14) %16 != 0){
+      reading += '\0';
+    }
+    sendUplink(reading, true);
+    Serial.println(sensorRead());
 #else
     sendUplink((String) sensorRead(), false);
 #endif

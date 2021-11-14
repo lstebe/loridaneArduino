@@ -1,7 +1,9 @@
 //sensor and sensor variables init here
-
-#define WH_PER_IMP 1.25
 #define SENSPIN 12
+#define WH_PER_IMP 1.25
+//length of the S0 impulse in ms
+#define PULSE_LEN 90
+#define BAN_LEN PULSE_LEN*1.2
 
 unsigned int S0pulses = 0; // is long in case we use very long sending intervals (up to 49 days possible)
 unsigned long int lastIRtime = 0;

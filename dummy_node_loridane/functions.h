@@ -109,21 +109,24 @@ void rxMode() {
   LoRa.receive();
 }
 //------------------------------------------------------------------------------------------------
-float sensorRead() {
-  return random(0, 3600);
+String sensorRead() {
+  return "1.23;2654.32"; //random(0, 3600);
 }
 //------------------------------------------------------------------------------------------------
 void sendUplink(String msg, bool ciph) {
   txMode();
 #ifdef ENCRYPT
   if (ciph == true) {
-    snprintf(ciphertext, 250, "%s%s", cipher->encryptString(UIDN).c_str(), cipher->encryptString(msg).c_str());
+    String plainstring = UIDN+msg;
+    String cipherstring=cipher->encryptString(plainstring);
+    int i = strlen(cipherstring.c_str());
+    snprintf(ciphertext, i, "%s", cipherstring.c_str() );
+    Serial.println(ciphertext);
   } else {
     snprintf(ciphertext, 250, "%s%s", UIDN.c_str(), msg.c_str());
   }
 #else
   snprintf(ciphertext, 250, "%s%s", UIDN.c_str(), msg.c_str());
-  //ciphertext = (char*) msg;
 #endif
 #ifdef DEBUG
   Serial.println("Sending Packet: ");
@@ -136,6 +139,9 @@ void sendUplink(String msg, bool ciph) {
 #endif
   //Send LoRa packet to receiver
   unsigned long int nowtime = millis();
+  if (!confirmflag) {
+    lastTimeSend = millis();
+  }
   LoRa.beginPacket();
   LoRa.print(ciphertext);
   LoRa.endPacket();
@@ -143,9 +149,6 @@ void sendUplink(String msg, bool ciph) {
   counter++;
   if (counter >= 900) {
     counter = 0;
-  }
-  if (!confirmflag) {
-    lastTimeSend = millis();
   }
 }
 //------------------------------------------------------------------------------------------------

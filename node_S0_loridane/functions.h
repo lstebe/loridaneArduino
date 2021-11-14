@@ -69,15 +69,15 @@ bool IRAM_ATTR onDownlink(String LRpayload) {
     String tdsizestr = LRpayload.substring(newdiskex, LRpayload.indexOf(";", newdiskex));
     unsigned tdcount = tdcountstr.toInt();
     tdsize = tdsizestr.toInt();
-    int duration = ceil((8 + ((400 - 4 * SF + 28) / (4 * SF) * 5)) * pow(2, SF) / (1e5)); 
+    int duration = ceil((8 + ((400 - 4 * SF + 28) / (4 * SF) * 5)) * pow(2, SF) / (1e5));
     startframe = duration * tdcount;
     endframe = duration * (tdcount + 1) - 51;
-                    Serial.print("New Timewindow: ");
-                    Serial.print(tdcountstr);
-                    Serial.print(" at ");
-                    Serial.print(startframe);
-                    Serial.print(" ms of ");
-                    Serial.println(tdsizestr);
+    Serial.print("New Timewindow: ");
+    Serial.print(tdcountstr);
+    Serial.print(" at ");
+    Serial.print(startframe);
+    Serial.print(" ms of ");
+    Serial.println(tdsizestr);
   }
   if (syncindex != -1) { // when a "sync" msg or a global node configuration (cn:) is received, the last synctime is the current systemtime
     synctime = millis();
@@ -113,24 +113,47 @@ void rxMode() {
   LoRa.receive();
 }
 
-void sendUplink(String msg) {
+void sendUplink(String msg, bool ciph) {
   txMode();
   Serial.print("Sending packet: ");
   Serial.println(counter);
+#ifdef ENCRYPT
+  if (ciph == true) {
+    String plainstring = UIDN + msg;
+    String cipherstring = cipher->encryptString(plainstring);
+    int i = strlen(cipherstring.c_str());
+    snprintf(ciphertext, i, "%s", cipherstring.c_str() );
+    Serial.println(ciphertext);
+  } else {
+    snprintf(ciphertext, 250, "%s%s", UIDN.c_str(), msg.c_str());
+  }
+#else
+  snprintf(ciphertext, 250, "%s%s", UIDN.c_str(), msg.c_str());
+#endif
 
+#ifdef DEBUG
+  Serial.println("Sending Packet: ");
+  Serial.print(counter);
+  Serial.print(" ");
+  Serial.print(frequency);
+  Serial.print(" MHz @ SF");
+  Serial.println(SF);
+  Serial.println(ciphertext);
+#endif
   //Send LoRa packet to receiver
   unsigned long int nowtime = millis();
+  if (!confirmflag) {
+    lastTimeSend = millis();
+  }
+
+  //Send LoRa packet to receiver
   LoRa.beginPacket();
-  LoRa.print(UIDN);
-  LoRa.print(msg);
+  LoRa.print(ciphertext);
   LoRa.endPacket();
   rxMode();
   counter++;
   if (counter >= 900) {
     counter = 0;
-  }
-  if (!confirmflag) {
-    lastTimeSend = millis();
   }
 }
 
@@ -168,7 +191,12 @@ bool acknowledge() {
     } else {
       LoRa.setFrequency(frequency);
       LoRa.setSpreadingFactor(SF);
-      sendUplink(UIDN);
+#ifdef ENCRYPT
+      sendUplink(UIDN, true);
+#else
+      sendUplink(UIDN, false);
+#endif
+#ifndef FREQFIX
       frequency += 2e5;
       if (frequency > 870e6) {
         SF += 1;
@@ -177,6 +205,7 @@ bool acknowledge() {
         }
         frequency = 863e6;
       }
+#endif
       delay(3500);
       //hold(3000);
     }

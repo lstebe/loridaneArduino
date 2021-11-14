@@ -26,10 +26,16 @@
 #include <WiFi.h>
 #include <SPI.h>
 #include <LoRa.h>
+#include "credentials.h"
 #include "sensorS0.h"
+#ifdef ENCRYPT
+#include "encrypt.h"
+Cipher * cipher = new Cipher();
+#endif
 
-unsigned long int startframe = 0;
-unsigned long int endframe = 1000;
+
+#define INPUT_BUFFER_LIMIT (250 + 1)
+char ciphertext[2 * INPUT_BUFFER_LIMIT] = {0}; //encrypted
 bool confirmflag = false;
 bool binded = false;
 int counter = 0;
@@ -47,6 +53,7 @@ WiFiClient espClient;
 #include "functions.h"
 
 
+
 void setup() {
   for (int i = 0; i < UIDNdash.length(); i++) {
     if (UIDNdash.substring(i, i + 1) != ":") {
@@ -60,7 +67,9 @@ void setup() {
   WiFi.mode(WIFI_OFF);
   btStop();
   pinMode(SENSPIN, INPUT_PULLDOWN);
-
+#ifdef ENCRYPT
+  cipher->setKey(aes_key);
+#endif
   //setup LoRa transceiver module
   LoRa.setPins(ss, rst, dio0);
 
@@ -79,8 +88,12 @@ void setup() {
   LoRa.setSpreadingFactor(SF);
   LoRa.setTxPower(txPower);
   Serial.println("LoRa Initializing OK!");
+#ifdef ENCRYPT
+  sendUplink(UIDN, true);
+#else
+  sendUplink(UIDN, false);
+#endif
   sensorSetup();
-  sendUplink(UIDN);
   //hold(3000);
   delay(3500);
   int packetSize = LoRa.parsePacket();
@@ -114,7 +127,7 @@ void loop() {
     onDownlink(LRpayload);
   }
   if (confirmflag && inFrame()) { // must the node confirm the receive to the server?
-    sendUplink("+");
+    sendUplink("+",false);
     confirmflag = false;
   }
 
@@ -130,19 +143,26 @@ void loop() {
     float value = sensorReadWatthours();
     if (value > 0) {
       float watts = wattsmean / S0pulses;
-      sendUplink((String)value + ";" + (String) watts);
-      //newreading = false;
+      String reading = (String)value + ";" + (String) watts;
+#ifdef ENCRYPT
+      while ((reading.length() + 14) % 16 != 0) {
+        reading += '\0';
+      }
+      sendUplink(reading, true);
+#else
+      sendUplink(reading, false);
+#endif
       sensorAfterSent();
     } else if (nowtime - lastTimeSend >= 300000) {
-      sendUplink("0;0");
+      sendUplink("0;0",false);
       lastIRtime = millis();
     }
   }
   int pinstate = digitalRead(SENSPIN);//reattach interrupt 110ms after the first rising edge of the pulse
   if (pinstate == HIGH && attachedIR == true) {
-      ISR();
-    }
-  if (nowtime - lastIRtime >= 110 && attachedIR == false) {
+    ISR();
+  }
+  if (nowtime - lastIRtime >= BAN_LEN  && attachedIR == false) {
     attachedIR = true;
   }
 }
