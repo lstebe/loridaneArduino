@@ -22,7 +22,7 @@ bool inFrame() {
   return false;
 }
 
-// analyses te incoming lora downlink msg.
+// analyses the incoming lora downlink msg.
 // function is stored in IRAM to improve the performance
 
 bool IRAM_ATTR onDownlink(String LRpayload) {
@@ -35,6 +35,7 @@ bool IRAM_ATTR onDownlink(String LRpayload) {
   int sindex = LRpayload.indexOf("sn:"); // index of spreadingfactor
   int tindex = LRpayload.indexOf("tn:"); // index of tx power
   int diskex = LRpayload.indexOf("td:"); // index of timedisk
+  int blockex = LRpayload.indexOf("BL:"); // index of sending block on or off
   int syncindex = LRpayload.indexOf("sync"); // index of syncmsg
   int sendintindex = LRpayload.indexOf("iv:"); // index to set interval
 
@@ -89,13 +90,20 @@ bool IRAM_ATTR onDownlink(String LRpayload) {
     Serial.print("Set interval to: ");
     Serial.println(sendinterval);
   }
+  if (blockex != -1) {
+    if (LRpayload.substring(blockex + PL, blockex + PL + 1) == "0") {
+      sendBlock = false;
+    } else if (LRpayload.substring(blockex + PL, blockex + PL + 1) == "1") {
+      sendBlock = true;
+    }
+  }
 
   return true;
 }
 
 // checks if the node sending interval is over AND it is in its timeframe
 bool maysend(unsigned long nowtime) {
-  if (nowtime - lastTimeSend >= sendinterval && inFrame()) {
+  if (nowtime - lastTimeSend >= sendinterval && inFrame() && !sendBlock) {
     return true;
   }
   return false;
@@ -125,10 +133,10 @@ void sendUplink(String msg, bool ciph) {
     snprintf(ciphertext, i, "%s", cipherstring.c_str() );
     Serial.println(ciphertext);
   } else {
-    snprintf(ciphertext, 250, "%s%s", UIDN.c_str(), msg.c_str());
+    snprintf(ciphertext, 250, "%s%s", UIDN.c_str(), msg.c_str()); //print payload to a byte buffer
   }
 #else
-  snprintf(ciphertext, 250, "%s%s", UIDN.c_str(), msg.c_str());
+  snprintf(ciphertext, 250, "%s%s", UIDN.c_str(), msg.c_str()); // in this case ciphertext is unencrypted
 #endif
 
 #ifdef DEBUG
@@ -167,7 +175,8 @@ void hold(int dur) {
   }
 }
 
-//function that will perform a bandscan for the gateway as long the node is not binded to one
+//function that will perform a bandscan for the gateway as long the node has no
+//binding to one if FREQFIX is undefined. else the freq stays the same for all acknowledgements
 bool acknowledge() {
   if (!binded) {
     frequency = 863e6;

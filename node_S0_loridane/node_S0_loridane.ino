@@ -18,8 +18,8 @@
    This header may not be edited or removed, except by the author
    The author provides this software as is without any warranty of usability or functionality. The responsibility of using this software in terms of keeping notice of hardware restrictions and
    local Law lies by the USER - respectivly everyone who executes this code.
-   Used Libraries provided by individuals: <Sandeep Mistry, LoRa>
-   ----------------------------------------------------------------------Version: <2021_07_05>--------------------------------------------------------------------------------------
+   Used Libraries provided by individuals: <Sandeep Mistry: LoRa> <Jan Joseph Pal: cipher.cpp, encrypt.h>
+   ----------------------------------------------------------------------Version: <2021_11_17>--------------------------------------------------------------------------------------
 */
 
 
@@ -48,8 +48,8 @@ unsigned long int lastTimeSend = 0;
 long int sendinterval = 60000;
 String payload;
 int packetSize;
+bool sendBlock = false;
 WiFiClient espClient;
-#include "init.h"
 #include "functions.h"
 
 
@@ -140,6 +140,7 @@ void loop() {
 
   nowtime = millis();
   if (maysend(nowtime)) {
+    beforeSend();//does nothing as S0 sensor
     float value = sensorReadWatthours();
     if (value > 0) {
       float watts = wattsmean / S0pulses;
@@ -148,9 +149,9 @@ void loop() {
       while ((reading.length() + 14) % 16 != 0) {
         reading += '\0';
       }
-      sendUplink(reading, true);
+      sendUplink(reading, true); //true means enrypted
 #else
-      sendUplink(reading, false);
+      sendUplink(reading, false); //false means unencrypted
 #endif
       sensorAfterSent();
     } else if (nowtime - lastTimeSend >= 300000) {
@@ -160,7 +161,7 @@ void loop() {
   }
   int pinstate = digitalRead(SENSPIN);//reattach interrupt 110ms after the first rising edge of the pulse
   if (pinstate == HIGH && attachedIR == true) {
-    ISR();
+    ISR(); //the service routine executed at rising edge
   }
   if (nowtime - lastIRtime >= BAN_LEN  && attachedIR == false) {
     attachedIR = true;

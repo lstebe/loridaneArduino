@@ -18,8 +18,8 @@
    This header may not be edited or removed, except by the author
    The author provides this software as is without any warranty of usability or functionality. The responsibility of using this software in terms of keeping notice of hardware restrictions and
    local Law lies by the USER - respectivly everyone who executes this code.
-   Used Libraries provided by individuals: <Sandeep Mistry, LoRa> <Franz Joseph Pal, cipher.cpp, encrypt.h>
-   ----------------------------------------------------------------------Version: <2021_06_20>--------------------------------------------------------------------------------------
+   Used Libraries provided by individuals: <Sandeep Mistry: LoRa> <Jan Joseph Pal: cipher.cpp, encrypt.h>
+   ----------------------------------------------------------------------Version: <2021_11_17>--------------------------------------------------------------------------------------
 */
 
 
@@ -27,11 +27,12 @@
 #include <SPI.h>
 #include <LoRa.h>
 #include "credentials.h"
-#include <base64.h>
+#include "sensorS0.h"
 #ifdef ENCRYPT
 #include "encrypt.h"
 Cipher * cipher = new Cipher();
 #endif
+
 
 #define INPUT_BUFFER_LIMIT (250 + 1)
 char ciphertext[2 * INPUT_BUFFER_LIMIT] = {0}; //encrypted
@@ -44,11 +45,14 @@ long int tdsegmentstart = 0;
 unsigned long int synctime = 0;
 unsigned long int nowtime = millis();
 unsigned long int lastTimeSend = 0;
-long int sendinterval = 600000;
+long int sendinterval = 60000;
 String payload;
 int packetSize;
+bool sendBlock = false;
 WiFiClient espClient;
 #include "functions.h"
+
+
 
 void setup() {
   for (int i = 0; i < UIDNdash.length(); i++) {
@@ -62,6 +66,7 @@ void setup() {
   Serial.println("LoRa Receiver");
   WiFi.mode(WIFI_OFF);
   btStop();
+  pinMode(SENSPIN, INPUT_PULLDOWN);
 #ifdef ENCRYPT
   cipher->setKey(aes_key);
 #endif
@@ -88,6 +93,7 @@ void setup() {
 #else
   sendUplink(UIDN, false);
 #endif
+  sensorSetup();
   //hold(3000);
   delay(3500);
   int packetSize = LoRa.parsePacket();
@@ -99,21 +105,19 @@ void setup() {
     }
     if (onDownlink(LRpayload)) {
       Serial.println("Acknowledged");
-      //sendUplink((String)sensorRead());
       binded = true;
     }
   } else {
     acknowledge();
   }
+  sensorSetup();
 
 }
 
 void loop() {
-  // try to parse packet
-  nowtime = millis();
 
   int packetSize = LoRa.parsePacket();
-  // try to parse LoRa packet. if not empty call the onUplink() in receive.h
+  // try to parse LoRa packet. if not empty call the isConfig() and onDownlink() in functions.h
   if (packetSize) {
     String LRpayload = "";
     while (LoRa.available()) {
@@ -122,23 +126,44 @@ void loop() {
     }
     onDownlink(LRpayload);
   }
-  if (confirmflag && inFrame()) {
-    sendUplink("+", false);
+  if (confirmflag && inFrame()) { // must the node confirm the receive to the server?
+    sendUplink("+",false);
     confirmflag = false;
-
   }
 
+  if (newreading) {
+    wattsmean += sensorReadWatts();
+    Serial.println(wattsmean / S0pulses );
+    Serial.println(sensorReadWatthours());
+    newreading = false;
+  }
+
+  nowtime = millis();
   if (maysend(nowtime)) {
+    beforeSend();//does nothing as S0 sensor
+    float value = sensorReadWatthours();
+    if (value > 0) {
+      float watts = wattsmean / S0pulses;
+      String reading = (String)value + ";" + (String) watts;
 #ifdef ENCRYPT
-    //sendUplink((String) sensorRead(), true);
-    String reading = sensorRead();
-    while((reading.length() +14) %16 != 0){
-      reading += '\0';
-    }
-    sendUplink(reading, true);
-    Serial.println(sensorRead());
+      while ((reading.length() + 14) % 16 != 0) {
+        reading += '\0';
+      }
+      sendUplink(reading, true); //true means enrypted
 #else
-    sendUplink((String) sensorRead(), false);
+      sendUplink(reading, false); //false means unencrypted
 #endif
+      sensorAfterSent();
+    } else if (nowtime - lastTimeSend >= 300000) {
+      sendUplink("0;0",false);
+      lastIRtime = millis();
+    }
+  }
+  int pinstate = digitalRead(SENSPIN);//reattach interrupt 110ms after the first rising edge of the pulse
+  if (pinstate == HIGH && attachedIR == true) {
+    ISR(); //the service routine executed at rising edge
+  }
+  if (nowtime - lastIRtime >= BAN_LEN  && attachedIR == false) {
+    attachedIR = true;
   }
 }

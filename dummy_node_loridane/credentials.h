@@ -1,4 +1,4 @@
-#define ENCRYPT
+//#define ENCRYPT
 //#define DEBUG
 #define FREQFIX
 
