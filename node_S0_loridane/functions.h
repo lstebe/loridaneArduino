@@ -129,8 +129,9 @@ void sendUplink(String msg, bool ciph) {
   if (ciph == true) {
     String plainstring = UIDN + msg;
     String cipherstring = cipher->encryptString(plainstring);
-    int i = strlen(cipherstring.c_str());
-    snprintf(ciphertext, i, "%s", cipherstring.c_str() );
+    String B64 = base64::encode(cipherstring);
+    int i = strlen(B64.c_str());
+    snprintf(ciphertext, i, "%s", B64.c_str() );
     Serial.println(ciphertext);
   } else {
     snprintf(ciphertext, 250, "%s%s", UIDN.c_str(), msg.c_str()); //print payload to a byte buffer

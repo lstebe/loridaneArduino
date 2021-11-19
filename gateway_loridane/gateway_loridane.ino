@@ -19,7 +19,7 @@
    The author provides this software as is without any warranty of usability or functionality. The responsibility of using this software in terms of keeping notice of hardware restrictions and
    local Law lies by the USER - respectivly everyone who executes this code.
    Used Libraries provided by individuals: <Sandeep Mistry, LoRa> <Nick O'Leary, PubSubClient>
-   ----------------------------------------------------------------------Version: <2021_06_22>--------------------------------------------------------------------------------------
+   ----------------------------------------------------------------------Version: <2021_11_20>--------------------------------------------------------------------------------------
 */
 
 //#include <ArduinoOTA.h>

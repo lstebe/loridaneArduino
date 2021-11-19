@@ -12,7 +12,7 @@
 #include <Arduino.h>
 #include <WString.h>
 
-//#define CIPHER_DEBUG
+#define CIPHER_DEBUG
 
 class Cipher {
 public:

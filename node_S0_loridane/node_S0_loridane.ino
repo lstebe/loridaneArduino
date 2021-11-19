@@ -30,6 +30,7 @@
 #include "sensorS0.h"
 #ifdef ENCRYPT
 #include "encrypt.h"
+#include "base64.h"
 Cipher * cipher = new Cipher();
 #endif
 
@@ -89,7 +90,7 @@ void setup() {
   LoRa.setTxPower(txPower);
   Serial.println("LoRa Initializing OK!");
 #ifdef ENCRYPT
-  sendUplink(UIDN, true);
+  sendUplink(UIDN, false);
 #else
   sendUplink(UIDN, false);
 #endif
@@ -127,7 +128,7 @@ void loop() {
     onDownlink(LRpayload);
   }
   if (confirmflag && inFrame()) { // must the node confirm the receive to the server?
-    sendUplink("+",false);
+    sendUplink("+", false);
     confirmflag = false;
   }
 
@@ -146,16 +147,18 @@ void loop() {
       float watts = wattsmean / S0pulses;
       String reading = (String)value + ";" + (String) watts;
 #ifdef ENCRYPT
+
       while ((reading.length() + 14) % 16 != 0) {
         reading += '\0';
       }
+
       sendUplink(reading, true); //true means enrypted
 #else
       sendUplink(reading, false); //false means unencrypted
 #endif
       sensorAfterSent();
     } else if (nowtime - lastTimeSend >= 300000) {
-      sendUplink("0;0",false);
+      sendUplink("0;0", false);
       lastIRtime = millis();
     }
   }
