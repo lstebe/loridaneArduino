@@ -18,7 +18,7 @@
    This header may not be edited or removed, except by the author
    The author provides this software as is without any warranty of usability or functionality. The responsibility of using this software in terms of keeping notice of hardware restrictions and
    local Law lies by the USER - respectivly everyone who executes this code.
-   Used Libraries provided by individuals: <Sandeep Mistry: LoRa> <Jan Joseph Pal: cipher.cpp, encrypt.h>
+   Used Libraries provided by individuals: <Sandeep Mistry: LoRa> <Franz Joseph Pal: cipher.cpp, encrypt.h>
    ----------------------------------------------------------------------Version: <2021_11_17>--------------------------------------------------------------------------------------
 */
 
@@ -127,7 +127,7 @@ void loop() {
     }
     onDownlink(LRpayload);
   }
-  if (confirmflag && inFrame()) { // must the node confirm the receive to the server?
+  if (confirmflag && inFrame()) { // must the node confirm the receivedmsg to the server?
     sendUplink("+", false);
     confirmflag = false;
   }

@@ -2,7 +2,7 @@
  * encrypt.h
  *
  *  Created on: Feb 28, 2019
- *      Author: joseph
+ *      Author: joseph pal
  */
 
 #ifndef CIPHER_H_

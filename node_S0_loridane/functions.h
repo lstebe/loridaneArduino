@@ -93,8 +93,10 @@ bool IRAM_ATTR onDownlink(String LRpayload) {
   if (blockex != -1) {
     if (LRpayload.substring(blockex + PL, blockex + PL + 1) == "0") {
       sendBlock = false;
+      confirmflag = true;
     } else if (LRpayload.substring(blockex + PL, blockex + PL + 1) == "1") {
       sendBlock = true;
+      confirmflag = false;
     }
   }
 

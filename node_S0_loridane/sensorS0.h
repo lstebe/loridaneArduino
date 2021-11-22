@@ -1,6 +1,6 @@
 //sensor and sensor variables init here
 #define SENSPIN 12
-#define WH_PER_IMP 1.25
+#define WH_PER_IMP 1
 //length of the S0 impulse in ms
 #define PULSE_LEN 90
 #define BAN_LEN PULSE_LEN*1.3
