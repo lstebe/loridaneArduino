@@ -64,7 +64,7 @@ void wifiSetup(char* sd, char* pwd) {
 
 //#----------------------------------------------BEGIN SETUP MQTT connections----------------------------------------------------------------------------------
 void MQreconnect( char* musr, char* mpwd) {
-  if (block_retry == false) {
+  if (block_retry == true) {
     return;
   }
   // Loop until MQTT Broker (re)connected

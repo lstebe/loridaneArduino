@@ -16,12 +16,12 @@ void readSerialIn(String initiation) {
         i = (initiation.length() + 1);
         initiation.toCharArray(sd, i);
         Serial.println(sd);
-        
+#ifdef PERSIST      
         //Save to Flash
         preferences.begin("credentials", false);
         preferences.putString("ssid", sd);
         preferences.end();
-        
+#endif        
         Serial.println("Please Enter Your WiFi-Password");
         flag = 2;
         block_retry = true;
@@ -31,11 +31,11 @@ void readSerialIn(String initiation) {
         initiation.toCharArray(pwd, i);
         flag = 0;
         Serial.println(pwd);
-        
+#ifdef PERSIST        
         preferences.begin("credentials", false);
         preferences.putString("pwd", pwd);
         preferences.end();
-        
+#endif        
         Serial.println("WiFi Credentials updated, try to connect.");
         WiFi.disconnect();
         wifiSetup(sd, pwd);
@@ -46,11 +46,11 @@ void readSerialIn(String initiation) {
         initiation.toCharArray(madr , i);
         Serial.println(madr);
         block_retry = true;
-        
+#ifdef PERSIST        
         preferences.begin("credentials", false);
         preferences.putString("madr", madr);
         preferences.end();
-        
+#endif        
         Serial.println("Please Enter the Username Of Your MQTT Broker");
         flag = 5;
         break;
@@ -66,11 +66,11 @@ void readSerialIn(String initiation) {
         i = (initiation.length() + 1);
         initiation.toCharArray(musr , i);
         Serial.println(musr);
-        
+#ifdef PERSIST        
         preferences.begin("credentials", false);
         preferences.putString("musr", musr);
         preferences.end();
-        
+#endif        
         Serial.println("Please Enter the Password for Your MQTT Broker");
         flag = 6;
         break;
@@ -81,11 +81,11 @@ void readSerialIn(String initiation) {
         Serial.println("MQTT Credentials updated");
         flag = 0;
         block_retry = false;
-
+#ifdef PERSIST
         preferences.begin("credentials", false);
         preferences.putString("mpwd", mpwd);
         preferences.end();
-
+#endif
         client.setServer(madr, mqport);
         MQreconnect(musr, mpwd);
         break;

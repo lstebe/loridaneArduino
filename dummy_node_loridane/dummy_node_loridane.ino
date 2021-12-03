@@ -47,6 +47,7 @@ unsigned long int lastTimeSend = 0;
 long int sendinterval = 600000;
 String payload;
 int packetSize;
+bool sendBlock = false;
 WiFiClient espClient;
 #include "functions.h"
 

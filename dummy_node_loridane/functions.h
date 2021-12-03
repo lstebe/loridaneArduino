@@ -34,6 +34,7 @@ bool IRAM_ATTR onDownlink(String LRpayload) {
   int sindex = msghandle.indexOf("sn:"); // index of spreadingfactor
   int tindex = msghandle.indexOf("tn:"); // index of tx power
   int diskex = msghandle.indexOf("td:"); // index of timedisk
+  int blockex = LRpayload.indexOf("BL:"); // index of sending block on or off
   int syncindex = msghandle.indexOf("sync"); // index of syncmsg
   int sendintindex = msghandle.indexOf("iv:"); // index to set interval
 
@@ -88,12 +89,20 @@ bool IRAM_ATTR onDownlink(String LRpayload) {
     Serial.print("Set interval to: ");
     Serial.println(sendinterval);
   }
-
+if (blockex != -1) {
+    if (LRpayload.substring(blockex + PL, blockex + PL + 1) == "0") {
+      sendBlock = false;
+      confirmflag = true;
+    } else if (LRpayload.substring(blockex + PL, blockex + PL + 1) == "1") {
+      sendBlock = true;
+      confirmflag = false;
+    }
+  }
   return true;
 }
 //------------------------------------------------------------------------------------------------
 bool maysend(unsigned long nowtime) {
-  if (nowtime - lastTimeSend >= sendinterval && inFrame()) {
+  if (nowtime - lastTimeSend >= sendinterval && inFrame() && !sendBlock) {
     return true;
   }
   return false;

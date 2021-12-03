@@ -1,5 +1,5 @@
 //Wifi Config
-char* ssid = "Loridane";
+char* ssid = "Loridane-02";
 char* password = "password";
 char sd[33];
 char pwd[33];

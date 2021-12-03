@@ -56,10 +56,6 @@ String LRpayload = "";
 String MQpayload; //Buffer that keeps incoming MQTT Data
 
 
-
-
-
-
 //#---------------------------------------------BEGIN the callback for incoming MQTT msg-----------------------------------------------------------------------------------
 void callback(char* topic, byte* payload, unsigned int length) { //on received MQTT Message
 #ifdef DEBUG
@@ -212,16 +208,15 @@ void setup() {
     wifiSetup(sd, pwd);
     MQreconnect(musr, mpwd);
   }
-}
 
-client.setServer(madr, mqport); //(... ,1883) for unencrypted
-client.setCallback(callback);
+  client.setServer(madr, mqport); //(... ,1883) for unencrypted
+  client.setCallback(callback);
 
-/*if (UIDGW == "00000000") { // if no UID yet set request one from the RPi server
-  client.publish("lora/0/acknowledge/", "1");
-  }*/
-Serial.println("Gateway UID:");
-Serial.println(UIDGW);
+  /*if (UIDGW == "00000000") { // if no UID yet set request one from the RPi server
+    client.publish("lora/0/acknowledge/", "1");
+    }*/
+  Serial.println("Gateway UID:");
+  Serial.println(UIDGW);
 }
 //#---------------------------------------------------END ESP32 Setup-----------------------------------------------------------------------------
 
