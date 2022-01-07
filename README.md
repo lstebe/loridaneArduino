@@ -35,3 +35,7 @@ Before Flashing a Gateway:
 define WiFi credentials and MQTT Credentials according to the settings of you local server setup in credentials.h
 
 At First Use (first acknowledgement) any Node and Gateway must be Admitted in the Loridane GUI!
+  
+Every Node in Loridane has an initial Sending interval of 10minutes. So you will not get any message from any node until then, except the acknowledgement and confirmations for configuration messages. However, if you admitted the node manually under the UI Tab "Admission" you can easily set up an interval of you choice via the UI Tab "Configure Node". The chosen Interval for every Node will be persisted on the server and the Node is set to this interval automatically by the server everytime it acknowledges.
+
+
