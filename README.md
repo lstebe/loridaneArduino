@@ -2,7 +2,7 @@
 Software for Installation and Flashing of ESP32 LoRa Boards
 
 This Software is the compliant part to the Loridane Software under setupLoridane.
-It is tested on ESP32/SX1267 Lora Boards like the
+It is tested on ESP32/SX1276 Lora Boards like the
 - Heltec Wireless Stick
 - it should work with the whole board family
 - TTGO Lilygo OLED
